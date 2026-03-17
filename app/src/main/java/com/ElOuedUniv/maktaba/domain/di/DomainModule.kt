@@ -38,4 +38,12 @@ object DomainModule {
     ): AddBookUseCase {
         return AddBookUseCase(bookRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideGetBookByIsbnUseCase(
+        bookRepository: BookRepository
+    ): com.ElOuedUniv.maktaba.domain.usecase.GetBookByIsbnUseCase {
+        return com.ElOuedUniv.maktaba.domain.usecase.GetBookByIsbnUseCase(bookRepository)
+    }
 }

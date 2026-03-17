@@ -21,18 +21,11 @@ import com.ElOuedUniv.maktaba.data.model.Book
 @Composable
 fun BookListView(
     onCategoriesClick: () -> Unit = {},
+    onAddBookClick: () -> Unit = {},
+    onBookClick: (String) -> Unit = {},
     viewModel: BookViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
-    if (uiState.isAddingBook) {
-        AddBookDialog(
-            onDismiss = { viewModel.onAction(BookUiAction.OnDismissAddBook) },
-            onConfirm = { title, isbn, pages ->
-                viewModel.onAction(BookUiAction.OnAddBookConfirm(title, isbn, pages))
-            }
-        )
-    }
 
     Scaffold(
         topBar = {
@@ -53,9 +46,7 @@ fun BookListView(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { 
-                viewModel.onAction(BookUiAction.OnAddBookClick)
-            }) {
+            FloatingActionButton(onClick = onAddBookClick) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Book"
@@ -80,6 +71,7 @@ fun BookListView(
                 } else {
                     BookList(
                         books = uiState.books,
+                        onBookClick = onBookClick,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -91,6 +83,7 @@ fun BookListView(
 @Composable
 fun BookList(
     books: List<Book>,
+    onBookClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -99,15 +92,16 @@ fun BookList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(books) { book ->
-            BookItem(book = book)
+            BookItem(book = book, onClick = { onBookClick(book.isbn) })
         }
     }
 }
 
 @Composable
-fun BookItem(book: Book) {
+fun BookItem(book: Book, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
