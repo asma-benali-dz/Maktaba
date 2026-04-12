@@ -13,6 +13,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -35,23 +37,33 @@ fun BookListView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Maktaba - My Library") },
+                title = { 
+                    Text(
+                        "Maktaba - My Library",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    ) 
+                },
                 actions = {
                     IconButton(onClick = onCategoriesClick) {
                         Icon(
                             imageVector = Icons.Default.Menu,
-                            contentDescription = "Categories"
+                            contentDescription = "Categories",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
                 )
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddBookClick) {
+            FloatingActionButton(
+                onClick = onAddBookClick,
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = Color.White
+            ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Book"
@@ -59,14 +71,24 @@ fun BookListView(
             }
         }
     ) { paddingValues ->
+        // إضافة تدرج لوني للخلفية يماثل الأيقونة
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background,
+                            Color(0xFFE1BEE7) // بنفسجي فاتح جداً في الأسفل
+                        )
+                    )
+                )
         ) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary
                 )
             } else {
                 if (uiState.books.isEmpty()) {
@@ -107,7 +129,10 @@ fun BookItem(book: Book, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Row(
             modifier = Modifier
@@ -152,6 +177,7 @@ fun BookItem(book: Book, onClick: () -> Unit) {
                     text = book.title,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
                     maxLines = 2
                 )
                 

@@ -1,30 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:pathData="M31,63.928c0,0 6.4,-11 12.1,-13.1c7.2,-2.6 26,-1.4 26,-1.4l38.1,38.1L107,108.928l-32,-1L31,63.928z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:endX="85.84757"
-                android:endY="92.4963"
-                android:startX="42.9492"
-                android:startY="49.59793"
-                android:type="linear">
-                <item
-                    android:color="#44000000"
-                    android:offset="0.0" />
-                <item
-                    android:color="#00000000"
-                    android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillType="nonZero"
-        android:pathData="M65.3,45.828l3.8,-6.6c0.2,-0.4 0.1,-0.9 -0.3,-1.1c-0.4,-0.2 -0.9,-0.1 -1.1,0.3l-3.9,6.7c-6.3,-2.8 -13.4,-2.8 -19.7,0l-3.9,-6.7c-0.2,-0.4 -0.7,-0.5 -1.1,-0.3C38.8,38.328 38.7,38.828 38.9,39.228l3.8,6.6C36.2,49.428 31.7,56.028 31,63.928h46C76.3,56.028 71.8,49.428 65.3,45.828zM43.4,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2c-0.3,-0.7 -0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C45.3,56.528 44.5,57.328 43.4,57.328L43.4,57.328zM64.6,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2s-0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C66.5,56.528 65.6,57.328 64.6,57.328L64.6,57.328z"
-        android:strokeWidth="1"
-        android:strokeColor="#00000000" />
+    <group
+        android:translateX="18"
+        android:translateY="18"
+        android:scaleX="0.7"
+        android:scaleY="0.7">
+
+        <!-- Book 1 (Bottom) - Dark Brown with Depth -->
+        <path
+            android:fillColor="#5D4037"
+            android:pathData="M10,80 L90,80 C93,80 95,82 95,85 L95,95 C95,98 93,100 90,100 L10,100 C7,100 5,98 5,95 L5,85 C5,82 7,80 10,80 Z" />
+        <path
+            android:fillColor="#4E342E"
+            android:pathData="M10,80 L90,80 L90,85 L10,85 Z" />
+        <!-- Pages Detail -->
+        <path
+            android:fillColor="#EFEBE9"
+            android:pathData="M12,87 L88,87 L88,98 L12,98 Z" />
+
+        <!-- Book 2 (Middle) - Deep Blue with Depth -->
+        <path
+            android:fillColor="#1565C0"
+            android:pathData="M15,55 L85,55 C88,55 90,57 90,60 L90,72 C90,75 88,77 85,77 L15,77 C12,77 10,75 10,72 L10,60 C10,57 12,55 15,55 Z" />
+        <path
+            android:fillColor="#0D47A1"
+            android:pathData="M15,55 L85,55 L85,60 L15,60 Z" />
+        <!-- Pages Detail -->
+        <path
+            android:fillColor="#F5F5F5"
+            android:pathData="M17,62 L83,62 L83,74 L17,74 Z" />
+
+        <!-- Book 3 (Top) - Forest Green with Depth -->
+        <path
+            android:fillColor="#2E7D32"
+            android:pathData="M20,30 L80,30 C83,30 85,32 85,35 L85,47 C85,50 83,52 80,52 L20,52 C17,52 15,50 15,47 L15,35 C15,32 17,30 20,30 Z" />
+        <path
+            android:fillColor="#1B5E20"
+            android:pathData="M20,30 L80,30 L80,35 L20,35 Z" />
+        <!-- Pages Detail -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M22,37 L78,37 L78,49 L22,49 Z" />
+
+        <!-- Gold Bookmark on Top Book -->
+        <path
+            android:fillColor="#FBC02D"
+            android:pathData="M60,30 L70,30 L70,55 L65,50 L60,55 Z" />
+
+    </group>
 </vector>
