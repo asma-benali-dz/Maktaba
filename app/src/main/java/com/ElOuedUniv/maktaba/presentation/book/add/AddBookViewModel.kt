@@ -1,9 +1,11 @@
 package com.ElOuedUniv.maktaba.presentation.book.add
 
+import android.content.Context
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ElOuedUniv.maktaba.data.model.Book
-import com.ElOuedUniv.maktaba.domain.usecase.AddBookUseCase
+import com.ElOuedUniv.maktaba.data.repository.BookRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,71 +15,87 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddBookViewModel @Inject constructor(
-    private val addBookUseCase: AddBookUseCase
+    private val repository: BookRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddBookUiState())
     val uiState = _uiState.asStateFlow()
 
-    fun onAction(action: AddBookUiAction) {
+    fun onAction(action: AddBookUiAction, context: Context? = null) {
         when (action) {
             is AddBookUiAction.OnTitleChange -> {
                 _uiState.update { it.copy(title = action.title) }
                 validateInputs()
             }
             is AddBookUiAction.OnIsbnChange -> {
-                _uiState.update { it.copy(isbn = action.isbn) }
+                val filteredIsbn = action.isbn.filter { it.isDigit() }.take(13)
+                _uiState.update { it.copy(isbn = filteredIsbn) }
                 validateInputs()
             }
             is AddBookUiAction.OnPagesChange -> {
-                _uiState.update { it.copy(nbPages = action.pages) }
+                val filteredPages = action.pages.filter { it.isDigit() }
+                _uiState.update { it.copy(nbPages = filteredPages) }
                 validateInputs()
             }
             AddBookUiAction.OnAddClick -> {
-                if (_uiState.value.isFormValid) addBook()
+                if (_uiState.value.isFormValid && context != null) {
+                    addBookWithImage(context)
+                }
             }
         }
+    }
+
+    fun onImageSelected(uri: Uri?) {
+        _uiState.update { it.copy(imageUri = uri) }
+        validateInputs()
     }
 
     private fun validateInputs() {
         val state = _uiState.value
-
-        val titleError = if (state.title.isBlank()) "Title cannot be empty" else null
-
-        val isbnError = when {
-            state.isbn.isBlank() -> "ISBN cannot be empty"
-            !state.isbn.all { it.isDigit() } -> "ISBN must contain digits only"
-            state.isbn.length != 13 -> "ISBN must be exactly 13 digits"
-            else -> null
-        }
-
-        val pagesError = when {
-            state.nbPages.isBlank() -> "Pages cannot be empty"
-            state.nbPages.toIntOrNull() == null -> "Pages must be a number"
-            state.nbPages.toInt() <= 0 -> "Pages must be a positive number"
-            else -> null
-        }
-
-        _uiState.update {
-            it.copy(
-                titleError = titleError,
-                isbnError = isbnError,
-                pagesError = pagesError,
-                isFormValid = titleError == null && isbnError == null && pagesError == null
-            )
-        }
+        val isFormValid = state.title.isNotBlank() &&
+                state.isbn.length == 13 &&
+                state.nbPages.isNotBlank() &&
+                state.imageUri != null
+        _uiState.update { it.copy(isFormValid = isFormValid) }
     }
 
-    private fun addBook() {
-        val state = _uiState.value
+    private fun addBookWithImage(context: Context) {
         viewModelScope.launch {
-            val book = Book(
-                isbn = state.isbn,
-                title = state.title,
-                nbPages = state.nbPages.toIntOrNull() ?: 0
-            )
-            addBookUseCase(book)
-            _uiState.update { it.copy(isSuccess = true) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            try {
+                val state = _uiState.value
+
+                val imageBytes = try {
+                    state.imageUri?.let { uri ->
+                        context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    }
+                } catch (e: Exception) {
+                    Log.e("AddBookVM", "Error reading image: ${e.message}")
+                    null
+                }
+
+                if (imageBytes == null) {
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "Please select a valid image") }
+                    return@launch
+                }
+
+                val success = repository.addBookWithFiles(
+                    title = state.title,
+                    isbn = state.isbn,
+                    nbPages = state.nbPages.toIntOrNull() ?: 0,
+                    imageBytes = imageBytes,
+                    pdfBytes = null
+                )
+
+                if (success) {
+                    _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                } else {
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "Server error: Failed to save book") }
+                }
+            } catch (e: Exception) {
+                Log.e("AddBookVM", "Unexpected error: ${e.message}")
+                _uiState.update { it.copy(isLoading = false, errorMessage = e.localizedMessage ?: "Unknown error occurred") }
+            }
         }
     }
 }

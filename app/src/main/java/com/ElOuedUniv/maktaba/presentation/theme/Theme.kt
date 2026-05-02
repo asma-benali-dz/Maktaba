@@ -17,31 +17,30 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = AppSkyBlue,
+    primary = LibrarySkyBlue,
     secondary = PurpleGrey80,
     tertiary = Pink80,
-    background = AppDeepBlue,
-    surface = AppDeepBlue,
+    background = Color(0xFF0F2027),
+    surface = Color(0xFF0F2027),
     onBackground = Color.White,
     onSurface = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = AppPurple,
-    secondary = AppSkyBlue,
+    primary = LibraryDeepPurple,
+    secondary = LibrarySkyBlue,
     tertiary = Pink40,
-    background = Color(0xFFF3E5F5), // خلفية بنفسجية فاتحة جداً مريحة
+    background = LibrarySurface,
     surface = Color.White,
     onPrimary = Color.White,
-    onBackground = AppPurple,
-    onSurface = AppPurple
+    onBackground = LibraryDeepPurple,
+    onSurface = LibraryDeepPurple
 )
 
 @Composable
 fun MaktabaTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = false, // نغلق الألوان الديناميكية لنحافظ على هويتنا
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

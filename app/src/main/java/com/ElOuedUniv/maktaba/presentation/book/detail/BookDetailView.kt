@@ -1,5 +1,7 @@
 package com.ElOuedUniv.maktaba.presentation.book.detail
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -7,19 +9,24 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import com.ElOuedUniv.maktaba.data.model.Book
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,95 +34,110 @@ fun BookDetailView(
     onBackClick: () -> Unit,
     viewModel: BookDetailViewModel = hiltViewModel()
 ) {
-    // Corrected to use uiState instead of state
     val uiState by viewModel.uiState.collectAsState()
+    val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(uiState.book?.title ?: "Book Detail") },
+                title = { Text("Book Details", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = {
+                    IconButton(onClick = {
+                        viewModel.deleteBook { onBackClick() }
+                    }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete Book", tint = Color.Red)
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = Color(0xFFD1C4E9),
+                    titleContentColor = Color(0xFF38006B)
                 )
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .background(Color(0xFFF5F5F5))
         ) {
             if (uiState.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (uiState.book != null) {
                 val book = uiState.book!!
-
-                // Same Logic: Try ISBN, otherwise a generic nice book photo
-                val imageUrl = if (book.isbn.length >= 10) {
-                    "https://covers.openlibrary.org/b/isbn/${book.isbn}-L.jpg"
-                } else {
-                    "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600"
-                }
-
-                // Hero Image Section
-                Box(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(350.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
                 ) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(imageUrl)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = book.title,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Fit,
-                        alignment = Alignment.Center
-                    )
-                }
+                    // تم حذف قسم الفيديو وعرض الصورة دائماً
+                    BookHeroImage(book)
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Book Info Card
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(6.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .offset(y = (-30).dp),
+                        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp, bottomStart = 24.dp, bottomEnd = 24.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        Text(
-                            text = book.title,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        HorizontalDivider()
-                        DetailRow(label = "📖 ISBN", value = book.isbn)
-                        DetailRow(label = "📄 Pages", value = "${book.nbPages}")
-                        DetailRow(label = "🔖 Status", value = "Reading")
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text(
+                                text = book.title,
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color(0xFF38006B)
+                            )
+
+                            HorizontalDivider(thickness = 1.dp, color = Color.LightGray.copy(alpha = 0.5f))
+
+                            DetailRow(icon = Icons.Default.Edit, label = "ISBN", value = book.isbn)
+                            DetailRow(icon = Icons.AutoMirrored.Filled.List, label = "Pages", value = "${book.nbPages} Pages")
+
+                            Text(
+                                text = "Description",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.DarkGray
+                            )
+
+                            Text(
+                                text = "This book, \"${book.title}\", is part of your personal library. You can view its details, check the number of pages, and manage its presence in your cloud storage from this screen.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.Gray,
+                                lineHeight = 24.sp
+                            )
+
+                            if (!book.pdfUrl.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(book.pdfUrl))
+                                        context.startActivity(intent)
+                                    },
+                                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF38006B))
+                                ) {
+                                    Text("START READING PDF", fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
                     }
                 }
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(uiState.errorMessage ?: "Book not found")
+                    Text("Book details could not be loaded.")
                 }
             }
         }
@@ -123,14 +145,40 @@ fun BookDetailView(
 }
 
 @Composable
-fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+fun BookHeroImage(book: Book) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(400.dp)
+            .background(Color(0xFFEDE7F6)),
+        contentAlignment = Alignment.Center
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(text = value, style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold)
+        if (!book.imageUrl.isNullOrEmpty()) {
+            AsyncImage(
+                model = book.imageUrl,
+                contentDescription = book.title,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = null,
+                modifier = Modifier.size(100.dp),
+                tint = Color(0xFFD1C4E9)
+            )
+        }
+    }
+}
+
+@Composable
+fun DetailRow(icon: ImageVector, label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = Color(0xFFD1C4E9), modifier = Modifier.size(24.dp))
+        Spacer(modifier = Modifier.width(12.dp))
+        Column {
+            Text(text = label, style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+            Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+        }
     }
 }

@@ -1,13 +1,21 @@
 package com.ElOuedUniv.maktaba.presentation.onboarding
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.ElOuedUniv.maktaba.data.local.PreferenceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class OnboardingViewModel @Inject constructor() : ViewModel() {
-    // Simple light implementation
-    fun onCompleteOnboarding() {
-        // Logic to mark onboarding as complete could go here
+class OnboardingViewModel @Inject constructor(
+    private val preferenceManager: PreferenceManager
+) : ViewModel() {
+
+    fun onCompleteOnboarding(onFinished: () -> Unit) {
+        viewModelScope.launch {
+            preferenceManager.setOnboardingCompleted(true)
+            onFinished()
+        }
     }
 }

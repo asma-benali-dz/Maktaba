@@ -1,9 +1,12 @@
 package com.ElOuedUniv.maktaba.data.model
 
-// TODO: Complete the Category data class implementation
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Category(
-    val id: String,
-    val name: String,
-    val description: String,
-    val iconRes: Int = 0
+    @SerialName("id") val id: String,
+    @SerialName("Name") val name: String,
+    @SerialName("Description") val description: String,
+    @SerialName("Icon_res") val iconRes: Int
 )

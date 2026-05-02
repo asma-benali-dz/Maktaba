@@ -1,17 +1,28 @@
 package com.ElOuedUniv.maktaba.presentation.book.add
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,6 +31,14 @@ fun AddBookView(
     viewModel: AddBookViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val scrollState = rememberScrollState()
+    val primaryPurple = Color(0xFF7E57C2)
+
+    // مُشغل اختيار الصور
+    val imageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+        viewModel.onImageSelected(it)
+    }
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) onBackClick()
@@ -27,112 +46,142 @@ fun AddBookView(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Add New Book") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-
-            // Cover Image Placeholder
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(4.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("📷", style = MaterialTheme.typography.displaySmall)
-                        Spacer(modifier = Modifier.height(8.dp))
+            CenterAlignedTopAppBar(
+                title = {
+                    Box(
+                        modifier = Modifier
+                            .border(
+                                border = BorderStroke(2.dp, primaryPurple),
+                                shape = RoundedCornerShape(50.dp)
+                            )
+                            .background(
+                                color = primaryPurple.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(50.dp)
+                            )
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                    ) {
                         Text(
-                            text = "Add Cover Image",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            "ADD NEW BOOK",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.Black,
+                                letterSpacing = 2.sp
+                            )
                         )
                     }
                 }
+            )
+        }
+    ) { padding ->
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = primaryPurple)
             }
-
-            // Title Field
-            OutlinedTextField(
-                value = uiState.title,
-                onValueChange = { viewModel.onAction(AddBookUiAction.OnTitleChange(it)) },
-                label = { Text("Title *") },
-                isError = uiState.titleError != null,
-                supportingText = {
-                    uiState.titleError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            // ISBN Field
-            OutlinedTextField(
-                value = uiState.isbn,
-                onValueChange = { viewModel.onAction(AddBookUiAction.OnIsbnChange(it)) },
-                label = { Text("ISBN (13 digits) *") },
-                isError = uiState.isbnError != null,
-                supportingText = {
-                    uiState.isbnError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
-            // Pages Field
-            OutlinedTextField(
-                value = uiState.nbPages,
-                onValueChange = { viewModel.onAction(AddBookUiAction.OnPagesChange(it)) },
-                label = { Text("Number of Pages *") },
-                isError = uiState.pagesError != null,
-                supportingText = {
-                    uiState.pagesError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(scrollState)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                OutlinedButton(
-                    onClick = onBackClick,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
+                // 📸 اختيار صورة الغلاف بتصميم احترافي
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
+                    border = if (uiState.imageUri == null) BorderStroke(1.dp, Color.LightGray) else null,
+                    onClick = { imageLauncher.launch("image/*") }
                 ) {
-                    Text("Cancel")
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        if (uiState.imageUri != null) {
+                            AsyncImage(
+                                model = uiState.imageUri,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Default.AddPhotoAlternate,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = primaryPurple.copy(alpha = 0.6f)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "SELECT BOOK COVER",
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Gray,
+                                        letterSpacing = 1.sp
+                                    )
+                                )
+                            }
+                        }
+                    }
                 }
-                Button(
-                    onClick = { viewModel.onAction(AddBookUiAction.OnAddClick) },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = uiState.isFormValid
+
+                OutlinedTextField(
+                    value = uiState.title,
+                    onValueChange = { viewModel.onAction(AddBookUiAction.OnTitleChange(it)) },
+                    label = { Text("Book Title") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = uiState.isbn,
+                    onValueChange = { viewModel.onAction(AddBookUiAction.OnIsbnChange(it)) },
+                    label = { Text("ISBN (13 digits)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = uiState.nbPages,
+                    onValueChange = { viewModel.onAction(AddBookUiAction.OnPagesChange(it)) },
+                    label = { Text("Number of Pages") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                if (uiState.errorMessage != null) {
+                    Text(uiState.errorMessage!!, color = MaterialTheme.colorScheme.error)
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("Confirm", fontWeight = FontWeight.Bold)
+                    OutlinedButton(
+                        onClick = onBackClick,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.5.dp, primaryPurple)
+                    ) {
+                        Text("CANCEL", color = primaryPurple, fontWeight = FontWeight.Bold)
+                    }
+
+                    Button(
+                        onClick = { viewModel.onAction(AddBookUiAction.OnAddClick, context) },
+                        enabled = uiState.isFormValid,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = primaryPurple)
+                    ) {
+                        Text("SAVE BOOK", fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }

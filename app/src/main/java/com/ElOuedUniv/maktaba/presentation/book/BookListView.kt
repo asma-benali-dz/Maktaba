@@ -1,27 +1,28 @@
 package com.ElOuedUniv.maktaba.presentation.book
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.ElOuedUniv.maktaba.data.model.Book
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,70 +34,86 @@ fun BookListView(
     viewModel: BookViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val primaryPurple = Color(0xFF7E57C2)
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        "Maktaba - My Library",
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    ) 
+            CenterAlignedTopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = {}) {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Home View",
+                            tint = primaryPurple,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                },
+                title = {
+                    Box(
+                        modifier = Modifier
+                            .border(
+                                border = BorderStroke(2.dp, primaryPurple),
+                                shape = RoundedCornerShape(50.dp)
+                            )
+                            .background(
+                                color = primaryPurple.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(50.dp)
+                            )
+                            .padding(horizontal = 28.dp, vertical = 8.dp) // تكبير الإطار قليلاً عبر زيادة الحشوة
+                    ) {
+                        Text(
+                            "MY LIBRARY",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.Black, // تغيير لون الخط للأسود
+                                letterSpacing = 2.sp
+                            )
+                        )
+                    }
                 },
                 actions = {
                     IconButton(onClick = onCategoriesClick) {
                         Icon(
-                            imageVector = Icons.Default.Menu,
+                            imageVector = Icons.Default.List,
                             contentDescription = "Categories",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            tint = primaryPurple,
+                            modifier = Modifier.size(32.dp)
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddBookClick,
-                containerColor = MaterialTheme.colorScheme.secondary,
-                contentColor = Color.White
+                containerColor = primaryPurple,
+                contentColor = Color.White,
+                shape = androidx.compose.foundation.shape.CircleShape
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add Book"
-                )
+                Icon(Icons.Default.Add, contentDescription = "Add Book")
             }
         }
     ) { paddingValues ->
-        // إضافة تدرج لوني للخلفية يماثل الأيقونة
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.background,
-                            Color(0xFFE1BEE7) // بنفسجي فاتح جداً في الأسفل
-                        )
-                    )
-                )
+                .background(MaterialTheme.colorScheme.background)
         ) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
-                    color = MaterialTheme.colorScheme.primary
+                    color = primaryPurple
                 )
             } else {
                 if (uiState.books.isEmpty()) {
-                    EmptyBooksMessage(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    EmptyBooksMessage(modifier = Modifier.align(Alignment.Center))
                 } else {
-                    BookList(
+                    BookGrid(
                         books = uiState.books,
                         onBookClick = onBookClick,
                         modifier = Modifier.fillMaxSize()
@@ -108,107 +125,116 @@ fun BookListView(
 }
 
 @Composable
-fun BookList(
+fun BookGrid(
     books: List<Book>,
     onBookClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
         modifier = modifier,
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(books) { book ->
-            BookItem(book = book, onClick = { onBookClick(book.isbn) })
+            BookCard(book = book, onClick = { onBookClick(book.isbn) })
         }
     }
 }
 
 @Composable
-fun BookItem(book: Book, onClick: () -> Unit) {
+fun BookCard(book: Book, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(320.dp),
         onClick = onClick,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        shape = MaterialTheme.shapes.large,
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Min)
-        ) {
-            val imageUrl = if (book.isbn.length >= 10) {
-                "https://covers.openlibrary.org/b/isbn/${book.isbn}-M.jpg"
-            } else {
-                "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=300"
-            }
-
-            Box(modifier = Modifier
-                .width(100.dp)
-                .fillMaxHeight()
-                .background(MaterialTheme.colorScheme.surfaceVariant)
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
             ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(imageUrl)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = book.title,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                    alignment = Alignment.Center
-                )
+                if (book.imageUrl != null) {
+                    AsyncImage(
+                        model = book.imageUrl,
+                        contentDescription = book.title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp).align(Alignment.Center),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
             }
-
-            VerticalDivider(
-                modifier = Modifier.fillMaxHeight(),
-                thickness = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
 
             Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(16.dp)
+                    .padding(12.dp)
+                    .fillMaxWidth()
             ) {
                 Text(
                     text = book.title,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 2
+                    maxLines = 2,
+                    minLines = 2,
+                    color = Color.Black
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
                 ) {
                     Column {
                         Text(
-                            text = "ISBN:",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "ISBN",
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = book.isbn.ifEmpty { "Not set" },
-                            style = MaterialTheme.typography.bodyMedium
+                            text = book.isbn.take(5) + "...",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium
                         )
                     }
-                    
+
+                    val statusColor = Color(0xFF4CAF50)
+
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "Pages:",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "Status",
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Text(
-                            text = if (book.nbPages == 0) "Not set" else "${book.nbPages}",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                                tint = statusColor
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Ready",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = statusColor
+                            )
+                        }
                     }
                 }
             }
@@ -222,20 +248,11 @@ fun EmptyBooksMessage(modifier: Modifier = Modifier) {
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "📚",
-            style = MaterialTheme.typography.displayLarge
-        )
+        Text(text = "📚", style = MaterialTheme.typography.displayLarge)
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "No books in your library",
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Click the + button to add a new book",
-            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }

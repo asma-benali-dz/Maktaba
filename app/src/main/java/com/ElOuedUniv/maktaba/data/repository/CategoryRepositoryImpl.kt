@@ -14,45 +14,34 @@ class CategoryRepositoryImpl @Inject constructor() : CategoryRepository {
         Category(
             id = "1",
             name = "Programming",
-            description = "Books about software development and coding"
+            description = "Books about software development and coding",
+            iconRes = android.R.drawable.ic_menu_preferences
         ),
         Category(
             id = "2",
             name = "Algorithms",
-            description = "Books about algorithms and data structures"
+            description = "Books about algorithms and data structures",
+            iconRes = android.R.drawable.ic_menu_compass
         ),
         Category(
             id = "3",
             name = "Databases",
-            description = "Books about database design and management"
-        ),
-        Category(
-            id="4",
-            name="Machine Learning",
-            description="Books about machine learning, AI, and data science"
-        ),
-        Category(
-            id="5",
-            name="Web Development",
-            description="Books about building websites and web applications"
-        ),
-        Category(
-            id="6",
-            name="Cybersecurity",
-            description="Books about network security, ethical hacking, and cyber defense"
+            description = "Books about database design and management",
+            iconRes = android.R.drawable.ic_menu_save
         )
     )
 
     private val categoriesFlow = MutableSharedFlow<List<Category>>(replay = 1).apply {
         tryEmit(_categoriesList)
     }
-    
+
     override fun getAllCategories(): Flow<List<Category>> = flow {
         delay(2000) // Simulate delay
         emitAll(categoriesFlow)
     }
 
-    override fun getCategoryById(id: String): Category? {
+    override suspend fun getCategoryById(id: String): Category? {
+        delay(500) // Simulate network delay
         return _categoriesList.find { it.id == id }
     }
 }
